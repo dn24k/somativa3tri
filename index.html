@@ -1,0 +1,142 @@
+
+<!--
+Programa: Avaliação 3 tri (colisaoentrequadrados)
+Nome: David Nicetto - Nº: 05 - Turma: 2°L
+DESCRIÇÃO: Jogo dos 2 quadrados e quando uma colisão acontece entre eles ele para.
+-->
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Jogo de colisão</title>
+    <style>
+        /* Personalização do canvas */
+        canvas {
+            border: 5px solid #008080;
+            background-color: #f0f8ff;
+        }
+    </style>
+    <script>
+        // Variáveis globais para os elementos do jogo
+        var PlayerA; // Quadrado controlado pelo jogador 1
+        var PlayerB; // Quadrado controlado pelo jogador 2
+        var keyControl = {}; // Objeto para armazenar as teclas pressionadas
+
+        // Função principal de início do jogo
+        function startGame() {
+            PlayerA = new createSquare(30, 30, "#ff4500", 15, 100); // Inicializa o Player A
+            PlayerB = new createSquare(30, 30, "#006400", 450, 100); // Inicializa o Player B
+            gameSpace.start(); // Ativa a área de jogo
+        }
+
+        // Objeto responsável por configurar o canvas e a atualização do jogo
+        var gameSpace = {
+            canvas: document.createElement("canvas"),
+            start: function () {
+                this.canvas.width = 500;
+                this.canvas.height = 300;
+                this.context = this.canvas.getContext("2d");
+                document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+                this.interval = setInterval(updateGameSpace, 15); // Taxa de atualização a cada 15 ms
+
+                // Detecta teclas pressionadas e soltas
+                window.addEventListener('keydown', function (event) {
+                    keyControl[event.key] = true;
+                });
+                window.addEventListener('keyup', function (event) {
+                    keyControl[event.key] = false;
+                });
+            },
+            // Limpa o canvas para nova renderização
+            clear: function () {
+                this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            },
+            // Pausa a atualização do jogo
+            pause: function () {
+                clearInterval(this.interval);
+            }
+        };
+
+        // Função para definir a estrutura de cada quadrado do jogo
+        function createSquare(width, height, color, posX, posY) {
+            this.width = width;
+            this.height = height;
+            this.speedX = 0;
+            this.speedY = 0;
+            this.x = posX;
+            this.y = posY;
+
+            // Renderiza o quadrado no canvas
+            this.draw = function () {
+                var context = gameSpace.context;
+                context.fillStyle = color;
+                context.fillRect(this.x, this.y, this.width, this.height);
+            };
+
+            // Detecta colisão com o outro quadrado
+            this.checkCollision = function (otherPlayer) {
+                return !(
+                    (this.y + this.height < otherPlayer.y) ||
+                    (this.y > otherPlayer.y + otherPlayer.height) ||
+                    (this.x + this.width < otherPlayer.x) ||
+                    (this.x > otherPlayer.x + otherPlayer.width)
+                );
+            };
+
+            // Atualiza a posição com base na velocidade
+            this.updatePosition = function () {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                // Limita o movimento dentro do canvas
+                if (this.x < 0) this.x = 0;
+                if (this.y < 0) this.y = 0;
+                if (this.x > gameSpace.canvas.width - this.width) {
+                    this.x = gameSpace.canvas.width - this.width;
+                }
+                if (this.y > gameSpace.canvas.height - this.height) {
+                    this.y = gameSpace.canvas.height - this.height;
+                }
+            };
+        }
+
+        // Função que controla a atualização do jogo
+        function updateGameSpace() {
+            // Detecta colisão entre Player A e Player B
+            if (PlayerA.checkCollision(PlayerB)) {
+                gameSpace.pause();
+                alert("Game Over: Collision detected!");
+            } else {
+                gameSpace.clear();
+
+                // Controle de movimento do Player A com teclas WASD
+                PlayerA.speedX = 0;
+                PlayerA.speedY = 0;
+                if (keyControl["a"]) { PlayerA.speedX = -2; }
+                if (keyControl["d"]) { PlayerA.speedX = 2; }
+                if (keyControl["w"]) { PlayerA.speedY = -2; }
+                if (keyControl["s"]) { PlayerA.speedY = 2; }
+
+                // Controle de movimento do Player B com teclas de seta
+                PlayerB.speedX = 0;
+                PlayerB.speedY = 0;
+                if (keyControl["ArrowLeft"]) { PlayerB.speedX = -2; }
+                if (keyControl["ArrowRight"]) { PlayerB.speedX = 2; }
+                if (keyControl["ArrowUp"]) { PlayerB.speedY = -2; }
+                if (keyControl["ArrowDown"]) { PlayerB.speedY = 2; }
+
+                // Atualiza a posição e renderiza os quadrados
+                PlayerA.updatePosition();
+                PlayerB.updatePosition();
+                PlayerA.draw();
+                PlayerB.draw();
+            }
+        }
+    </script>
+</head>
+<body onload="startGame();">
+    <!-- Instruções de controle para os jogadores -->
+    <p style="text-align:center;">Player 1 (Orange): W, A, S, D</p>
+    <p style="text-align:center;">Player 2 (Green): Arrow Keys</p>
+</body>
+</html>
